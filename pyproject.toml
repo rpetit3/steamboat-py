@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "steamboat"
+version = "0.0.1"
+description = "A collection of tools/scripts for microbial bioinformatics"
+authors = [
+    "Robert A. Petit III <robbie.petit@gmail.com>",
+]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/rpetit3/steamboat"
+repository = "https://github.com/rpetit3/steamboat"
+keywords = ["bioinformatics"]
+
+[tool.poetry.scripts]
+steamboat = "steamboat.steamboat:main"
+
+[tool.poetry.dependencies]
+python = "^3.7.1"
+rich-click = "^1.6.1"
+executor = "^23.2"
+rich = "^13.3.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+isort = "^5.0"
+flake8 = "^5.0"
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
