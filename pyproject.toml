@@ -1,14 +1,14 @@
 [tool.poetry]
-name = "steamboat"
-version = "0.0.1"
+name = "steamboat-binf"
+version = "1.0.0"
 description = "A collection of tools/scripts for microbial bioinformatics"
 authors = [
     "Robert A. Petit III <robbie.petit@gmail.com>",
 ]
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/rpetit3/steamboat"
-repository = "https://github.com/rpetit3/steamboat"
+homepage = "https://github.com/rpetit3/steamboat-py"
+repository = "https://github.com/rpetit3/steamboat-py"
 keywords = ["bioinformatics"]
 
 [tool.poetry.scripts]
