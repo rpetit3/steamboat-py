@@ -1,5 +1,8 @@
 [tool.poetry]
 name = "steamboat-binf"
+packages = [
+    {include = "steamboat"}
+]
 version = "1.0.0"
 description = "A collection of tools/scripts for microbial bioinformatics"
 authors = [
