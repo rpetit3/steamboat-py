@@ -106,4 +106,4 @@ def validate_file(filename: str) -> str:
         raise FileNotFoundError(f"File ('{filename}') not found, cannot continue")
     elif f.stat().st_size == 0:
         raise ValueError(f"File ('{filename}') is empty, cannot continue")
-    return f.absolute()
+    return str(f.absolute())

@@ -16,6 +16,7 @@ keywords = ["bioinformatics"]
 
 [tool.poetry.scripts]
 gisaid-batch = "steamboat.cli.repos.gisaid.batch:main"
+nwss-batch = "steamboat.cli.repos.nwss.batch:main"
 
 [tool.poetry.dependencies]
 python = "^3.10.0"
