@@ -172,7 +172,7 @@ def _process_row(row: dict, mappings: dict) -> dict:
 
     # Test if Temp is a digit
     if row[mappings['column_mappings']['collection_water_temp']].replace('.','',1).isdigit():
-        shared_fields['collection_water_temp'] = (float(row[mappings['column_mappings']['collection_water_temp']]) - 32) * 5 / 9,  # Convert Fahrenheit to Celsius
+        shared_fields['collection_water_temp'] = f"{(float(row[mappings['column_mappings']['collection_water_temp']]) - 32) * 5 / 9:.2f}"  # Convert Fahrenheit to Celsius
     else:
         logging.warning(f"Collection water temperature ({row[mappings['column_mappings']['collection_water_temp']]}) for sample {sample_id} is not a number, skipping conversion and leaving empty")
         shared_fields['collection_water_temp'] = ""
