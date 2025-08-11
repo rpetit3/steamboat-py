@@ -211,8 +211,11 @@ def _process_row(row: dict, mappings: dict) -> dict:
             rec_eff_target_name: ""
             rec_eff_spike_matrix: ""
     """
-    site_id = row[mappings['column_mappings']['site']].lower().replace(" ", "_")
+    site_id = row[mappings['column_mappings']['site']].lower().rstrip().replace(" ", "_")
     if site_id not in mappings['sites']:
+        if site_id.startswith("pt_") or site_id.startswith("exclude_"):
+            logging.debug(f"Site '{site_id}' is an exclusion, skipping sample {sample_id}")
+            return {}
         logging.warning(f"Site '{site_id}' not found in mappings, skipping sample {sample_id}")
         return {}
     shared_fields['reporting_jurisdiction'] = mappings['sites'][site_id]['reporting_jurisdiction']
@@ -244,11 +247,11 @@ def _process_row(row: dict, mappings: dict) -> dict:
         if nwss_mapping in row:
             value = row[nwss_mapping]
             if value == "":
-                logging.warning(f"Value for '{target}' in sample {sample_id} is empty, skipping")
+                logging.debug(f"Value for '{target}' in sample {sample_id} is empty, skipping")
                 continue
             else:
                 if target not in mappings['targets']:
-                    logging.warning(f"Target {target} not found in mappings, skipping")
+                    logging.debug(f"Target {target} not found in mappings, skipping")
                     continue
                 else:
                     """
