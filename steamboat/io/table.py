@@ -1,6 +1,7 @@
 import csv
 import logging
 
+
 def read_table(
     input: str, delimiter: str = "\t", has_header: bool = True
 ) -> dict | list:

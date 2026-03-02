@@ -15,6 +15,7 @@ repository = "https://github.com/rpetit3/steamboat-py"
 keywords = ["bioinformatics"]
 
 [tool.poetry.scripts]
+arln-batch = "steamboat.cli.repos.arln.batch:main"
 gisaid-batch = "steamboat.cli.repos.gisaid.batch:main"
 nwss-batch = "steamboat.cli.repos.nwss.batch:main"
 

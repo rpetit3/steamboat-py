@@ -2,6 +2,7 @@
 *.json
 .idea
 __pycache__
+temp/
 
 gisaid.yaml
 nwss.yaml
