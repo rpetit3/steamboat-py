@@ -42,109 +42,100 @@ def _process_metadata(row: dict) -> dict:
         Date Sequenced -> wgs_date_put_on_sequencer
     """
     if row["Sample Type"] == "CRE":
+        # Check for missing required fields
+        required_fields = {
+            "LIMS ID #": row.get("LIMS ID #", "").strip(),
+            "SRR ID": row.get("SRR ID", "").strip(),
+            "Extraction Date": row.get("Extraction Date", "").strip(),
+            "Date Sequenced": row.get("Date Sequenced", "").strip(),
+        }
+        missing = [field for field, value in required_fields.items() if not value]
+        if missing:
+            return {"_missing": missing, "_sample": row.get("LIMS ID #", "UNKNOWN").strip() or "UNKNOWN"}
+
         # Process CRE sample
-        lims_id = row["LIMS ID #"]
+        lims_id = required_fields["LIMS ID #"]
         # Extract year from first two digits of LIMS ID
         year = f"20{lims_id[:2]}"
         return {
             'record_id': lims_id,
             'arln_specimen_id': lims_id,
             'wgs_id': f"{year}LC_{lims_id}",
-            'srr_number': row["SRR ID"], 
-            'wgs_date_id_created': row["Extraction Date"],
-            'wgs_date_sent_to_seqfac': row["Extraction Date"],
-            'wgs_date_put_on_sequencer': row["Date Sequenced"],
+            'srr_number': required_fields["SRR ID"],
+            'wgs_date_id_created': required_fields["Extraction Date"],
+            'wgs_date_sent_to_seqfac': required_fields["Extraction Date"],
+            'wgs_date_put_on_sequencer': required_fields["Date Sequenced"],
         }
 
     return {}
 
 
-def _process_bactopia_summary(row: dict) -> list:
+def _process_gigatyper(row: dict) -> tuple:
     """
-    Parser for Bactopia summary results and extract MLST information.
+    Extract sample ID and formatted MLST report from GigaTyper results.
 
     Args:
-        row (dict): a row from the Bactopia summary table
+        row (dict): a row from the GigaTyper output table
 
     Returns:
-        list: 0: sample_id, 1: ARLN formatted MLST result
+        tuple: (sample_id, formatted_report)
 
-    Columns of interest: sample, mlst_scheme, mlst_st
-
-
-    CSV data element:
-
-    bacterial_wgs_result
-
-    Entry value and format instructions:
-
-    Enter "MLST_<WGS result>_<scheme used>" or "N/A" based on the below scenarios.
-
-    If an isolate does not have a defined Oxford, Pasteur, or Achtman MLST scheme, please enter the abbreviated organism name in place of the scheme name for <scheme used> (e.g., MLST_114_ecloacae; MLST_147_kpneumoniae; MLST_773_paeruginosa).
-
-    If the MLST profile cannot be defined for an isolate with an available MLST scheme due to the presence of a novel allele or novel profile, please enter "_unnamed" for <WGS result> (e.g., MLST_unnamed_Oxford; MLST_unnamed_ecloacae).
-
-    For E. coli and A. baumannii isolates, for which two MLST schemes are available, please report MLST results from both schemes (e.g., MLST_2_Pasteur; MLST_208_Oxford)
-
-    If an MLST scheme is not available for an isolate's genus/species, please leave this data element blank.
-
-    Example record entry (K. aerogenes):
-
-    MLST_93_kaerogenes
-
-    Example record entry (E.coli):
-
-    MLST_10_Achtman; MLST_650_Pasteur
-
-    Example record entry (A. baumannii):
-
-    MLST_473_Oxford; MLST_2_Pasteur
-
+    Columns of interest: sample, formatted_report
     """
-    sample_id = row["sample"]
-    mlst_scheme = row["mlst_scheme"]
-    mlst_st = row["mlst_st"]
-
-    if mlst_scheme and mlst_st:
-        bacterial_wgs_result = f"MLST_{mlst_st}_{mlst_scheme}"
-    elif mlst_scheme and not mlst_st:
-        bacterial_wgs_result = f"MLST_unnamed_{mlst_scheme}"
-    else:
-        bacterial_wgs_result = ""
-
-    return sample_id, bacterial_wgs_result
+    return row["sample"], row["formatted_report"]
 
 
-def parse_arln(metadata: str, summary: str) -> dict:
+def parse_arln(metadata: str, gigatyper: str) -> dict:
     """
-    Parse a sequencing metadata file and a summary of Bactopia results file,
-    then return a dictionary of results
+    Parse a sequencing metadata file and a GigaTyper results file,
+    then return a list of ARLN-formatted results.
 
     Args:
         metadata (str): sequencing metadata file to be parsed in CSV format
-        summary (str): summary of Bactopia results file to be parsed in TSV format
+        gigatyper (str): GigaTyper results file to be parsed in TSV format
 
     Returns:
-        dict: A dictionary of results
-
-    Examples:
-        >>> from steamboat.repos.nwss import parse_results
-        >>> results = parse_results("data.tsv", mappings)
+        list: A list of ARLN-formatted result dictionaries
     """
     logging.debug(f"Parsing metadata from {metadata}")
     results = []
 
-    bactopia_results = {}
-    for row in read_table(summary, delimiter="\t", has_header=True):
-        sample_id, mlst = _process_bactopia_summary(row)
-        bactopia_results[sample_id] = mlst
+    gigatyper_results = {}
+    for row in read_table(gigatyper, delimiter="\t", has_header=True):
+        sample_id, formatted_report = _process_gigatyper(row)
+        if sample_id in gigatyper_results:
+            gigatyper_results[sample_id].append(formatted_report)
+        else:
+            gigatyper_results[sample_id] = [formatted_report]
+    gigatyper_results = {k: ";".join(v) for k, v in gigatyper_results.items()}
 
+    errors = {}
     for row in read_table(metadata, delimiter=",", has_header=True):
         row_results = _process_metadata(row)
-        if row_results['record_id'] in bactopia_results:
-            row_results['bacterial_wgs_result'] = bactopia_results[row_results['record_id']]
+        if not row_results:
+            continue
+
+        sample = row.get("LIMS ID #", "UNKNOWN").strip() or "UNKNOWN"
+        missing = []
+
+        if "_missing" in row_results:
+            missing.extend(row_results['_missing'])
+
+        if sample not in gigatyper_results:
+            missing.append("GigaTyper results")
+        elif not missing:
+            row_results['bacterial_wgs_result'] = gigatyper_results[sample]
+
+        if missing:
+            errors[sample] = missing
         else:
-            logging.error(f"No Bactopia results found for record_id {row_results['record_id']}")
-            sys.exit(1)
+            row_results.update(ARLN_CONSTANTS)
+            results.append(row_results)
+
+    if errors:
+        logging.error("Samples with missing data detected:")
+        for sample, missing in errors.items():
+            logging.error(f"  Sample '{sample}': missing {', '.join(missing)}")
+        sys.exit(1)
 
     return results
