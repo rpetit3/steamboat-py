@@ -15,7 +15,6 @@ from steamboat.io.check import check_file, file_exists_error
 from steamboat.io.yaml import read_yaml
 from steamboat.repos.nwss import NWSS_FIELDS, parse_results
 
-
 # Set up Rich
 stderr = rich.console.Console(stderr=True)
 rich.traceback.install(console=stderr, width=200, word_wrap=True, extra_lines=1)
@@ -113,7 +112,7 @@ def nwss_batch(
     yaml_file = check_file(yaml)
 
     # Output files
-    nwss_csv = f'{outdir}/{prefix}.csv'
+    nwss_csv = f"{outdir}/{prefix}.csv"
 
     # Make sure output files don't already exist
     file_exists_error(nwss_csv, force)
@@ -124,7 +123,7 @@ def nwss_batch(
 
     # Write the output files
     logging.info(f"Writing {nwss_csv}")
-    with open(nwss_csv, 'wt') as csv_fh:
+    with open(nwss_csv, "wt") as csv_fh:
         writer = csv.DictWriter(csv_fh, fieldnames=NWSS_FIELDS)
         writer.writeheader()
         writer.writerows(parsed_results)

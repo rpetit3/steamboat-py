@@ -15,28 +15,28 @@ def execute(
     allow_fail=False,
 ):
     """
-    A simple wrapper around executor.
-s
-    Args:
-        cmd (str): The command to be executed
-        directory (Path, optional): The directory to execute the command in. Defaults to Path.cwd().
-        capture (bool, optional): Capture the output of the command. Defaults to False.
-        stdout_file (Path, optional): The file to write stdout to. Defaults to None.
-        stderr_file (Path, optional): The file to write stderr to. Defaults to None.
-        allow_fail (bool, optional): Allow the command to fail. Defaults to False.
+        A simple wrapper around executor.
+    s
+        Args:
+            cmd (str): The command to be executed
+            directory (Path, optional): The directory to execute the command in. Defaults to Path.cwd().
+            capture (bool, optional): Capture the output of the command. Defaults to False.
+            stdout_file (Path, optional): The file to write stdout to. Defaults to None.
+            stderr_file (Path, optional): The file to write stderr to. Defaults to None.
+            allow_fail (bool, optional): Allow the command to fail. Defaults to False.
 
-    Returns:
-        Union[bool, list]: True if successful, otherwise a list of stdout and stderr
+        Returns:
+            Union[bool, list]: True if successful, otherwise a list of stdout and stderr
 
-    Raises:
-        ExternalCommandFailed: If the command fails and allow_fail is True
+        Raises:
+            ExternalCommandFailed: If the command fails and allow_fail is True
 
-    Examples:
-        >>> from steamboat.utils.generic import execute
-        >>> stdout, stderr = execute(
-                f"{cat_type} {subject} | {engine} -query {query} -subject - -outfmt '6 {outfmt}' {qcov_hsp_perc} {perc_identity}",
-                capture=True,
-            )
+        Examples:
+            >>> from steamboat.utils.generic import execute
+            >>> stdout, stderr = execute(
+                    f"{cat_type} {subject} | {engine} -query {query} -subject - -outfmt '6 {outfmt}' {qcov_hsp_perc} {perc_identity}",
+                    capture=True,
+                )
     """
     try:
         command = ExternalCommand(

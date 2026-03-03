@@ -45,8 +45,8 @@ def _read_fasta_as_dict(fasta: str) -> dict:
     """
     logging.debug(f"Reading FASTA from {fasta} as dictionary")
     seqs = {}
-    with open(fasta, 'r') as fasta_fh:
-        for record in SeqIO.parse(fasta_fh,'fasta'):
+    with open(fasta, "r") as fasta_fh:
+        for record in SeqIO.parse(fasta_fh, "fasta"):
             seqs[record.name] = str(record.seq)
     return seqs
 
@@ -67,8 +67,8 @@ def _read_fasta_as_list(fasta: str) -> list:
     """
     logging.debug(f"Reading FASTA from {fasta} as list")
     seqs = []
-    with open(fasta, 'r') as fasta_fh:
-        for record in SeqIO.parse(fasta_fh,'fasta'):
+    with open(fasta, "r") as fasta_fh:
+        for record in SeqIO.parse(fasta_fh, "fasta"):
             seqs.append(str(record.seq))
     return seqs
 
@@ -94,7 +94,9 @@ def write_fasta(fasta: str, seqs: dict | list):
     elif isinstance(seqs, list):
         _write_list_to_fasta(fasta, seqs)
     else:
-        raise ValueError("Invalid sequence type, please use either a dictionary or list")
+        raise ValueError(
+            "Invalid sequence type, please use either a dictionary or list"
+        )
 
 
 def _write_dict_to_fasta(fasta: str, seqs: dict):
@@ -110,7 +112,7 @@ def _write_dict_to_fasta(fasta: str, seqs: dict):
         >>> write_dict_to_fasta("data.fasta", {"seq1": "ATGC", "seq2": "ATGC"})
     """
     logging.debug(f"Writing dictionary to FASTA ({fasta})")
-    with open(fasta, 'w') as fasta_fh:
+    with open(fasta, "w") as fasta_fh:
         for seq_name, seq in seqs.items():
             fasta_fh.write(f">{seq_name}\n{seq}\n")
 
@@ -128,6 +130,6 @@ def _write_list_to_fasta(fasta: str, seqs: list):
         >>> write_list_to_fasta("data.fasta", ["ATGC", "ATGC"])
     """
     logging.debug(f"Writing list to FASTA ({fasta})")
-    with open(fasta, 'w') as fasta_fh:
+    with open(fasta, "w") as fasta_fh:
         for i, seq in enumerate(seqs):
             fasta_fh.write(f">seq{i}\n{seq}\n")

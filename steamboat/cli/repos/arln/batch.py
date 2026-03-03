@@ -14,7 +14,6 @@ import steamboat
 from steamboat.io.check import check_file, file_exists_error
 from steamboat.repos.arln import ARLN_FIELDS, parse_arln
 
-
 # Set up Rich
 stderr = rich.console.Console(stderr=True)
 rich.traceback.install(console=stderr, width=200, word_wrap=True, extra_lines=1)
@@ -110,7 +109,7 @@ def arln_batch(
     gigatyper_file = check_file(gigatyper)
 
     # Output files
-    arln_csv = Path(outdir) / f'{prefix}.csv'
+    arln_csv = Path(outdir) / f"{prefix}.csv"
 
     # Make sure output files don't already exist, delete if --force
     file_exists_error(arln_csv, force)
@@ -122,7 +121,7 @@ def arln_batch(
 
     # Write the output files
     logging.info(f"Writing {arln_csv}")
-    with open(arln_csv, 'wt') as csv_fh:
+    with open(arln_csv, "wt") as csv_fh:
         writer = csv.DictWriter(csv_fh, fieldnames=ARLN_FIELDS)
         writer.writeheader()
         writer.writerows(parsed_results)

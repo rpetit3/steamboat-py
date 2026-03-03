@@ -50,8 +50,9 @@ NWSS_FIELDS = [
     "inhibition_detect",
     "inhibition_adjust",
     "major_lab_method",
-    "major_lab_method_desc"
+    "major_lab_method_desc",
 ]
+
 
 def _process_row(row: dict, mappings: dict) -> dict:
     """
@@ -73,15 +74,15 @@ def _process_row(row: dict, mappings: dict) -> dict:
         SampleCollected	8/8/2023 7:00
         SampleProcessed	8/9/2023
         SiteDescription	Influent
-        Comments	
+        Comments
         [BCoV]	47.43
         [SC2]	0.211
         [Flu A]	0
         [Flu B]	0
-        [MeV]	
-        [RSV]	
-        [NoroGI]	
-        [NoroGII]	
+        [MeV]
+        [RSV]
+        [NoroGI]
+        [NoroGII]
         Recovery Efficiency	43.93%
         Estimated SC2 orig conc	4119.27
         Estimated Flu A orig conc	0
@@ -96,8 +97,8 @@ def _process_row(row: dict, mappings: dict) -> dict:
         Avg est FluA conc post recov cntrl	2179.56
         Avg est FluB conc pre recov cntrl	0
         Avg est FluB conc post recov cntrl	0
-        Avg est MV conc pre recov cntrl	
-        Avg est MV conc post recov cntrl	
+        Avg est MV conc pre recov cntrl
+        Avg est MV conc post recov cntrl
         Avg est RSV conc pre recov cntrl	0
         Avg est RSV conc post recov cntrl	0
         Avg est NoroGI conc pre recov cntrl	0
@@ -130,11 +131,11 @@ def _process_row(row: dict, mappings: dict) -> dict:
     The "targets" contains is split into two parts:
         - The target key (e.g., "sars_cov_2") is put in the "pcr_target" field
         - The target value of the mapped column is put in the "pcr_target_avg_conc"
-    
+
     For "targets" columns, if the value is empty, produce a warning and do not log the value.
     """
     row_results = {}
-    sample_id = row[mappings['column_mappings']['sample_id']]
+    sample_id = row[mappings["column_mappings"]["sample_id"]]
 
     """
     Add shared fields to the row results that tend to be constant across samples.
@@ -155,34 +156,45 @@ def _process_row(row: dict, mappings: dict) -> dict:
         pcr_target_units: ""
     """
     shared_fields = {
-        'sample_id': sample_id,
-        
+        "sample_id": sample_id,
         # Taken from the YAML mappings
-        "rec_eff_spike_conc": mappings['rec_eff_spike_conc'],
-        'inhibition_detect': mappings['inhibition_detect'],
-        'inhibition_adjust': mappings['inhibition_adjust'],
-        'lab_id': mappings['lab_id'],
-        'lod_sewage': mappings['lod_sewage'],
-        'major_lab_method': mappings['major_lab_method'],
-        'major_lab_method_desc': mappings['major_lab_method_desc'],
-        'ntc_amplify': mappings['ntc_amplify'],
-        'pasteurized': mappings['pasteurized'],
-        'pcr_target_units': mappings['pcr_target_units'],
+        "rec_eff_spike_conc": mappings["rec_eff_spike_conc"],
+        "inhibition_detect": mappings["inhibition_detect"],
+        "inhibition_adjust": mappings["inhibition_adjust"],
+        "lab_id": mappings["lab_id"],
+        "lod_sewage": mappings["lod_sewage"],
+        "major_lab_method": mappings["major_lab_method"],
+        "major_lab_method_desc": mappings["major_lab_method_desc"],
+        "ntc_amplify": mappings["ntc_amplify"],
+        "pasteurized": mappings["pasteurized"],
+        "pcr_target_units": mappings["pcr_target_units"],
     }
 
     # Test if Temp is a digit
-    if row[mappings['column_mappings']['collection_water_temp']].replace('.','',1).isdigit():
-        shared_fields['collection_water_temp'] = f"{(float(row[mappings['column_mappings']['collection_water_temp']]) - 32) * 5 / 9:.2f}"  # Convert Fahrenheit to Celsius
+    if (
+        row[mappings["column_mappings"]["collection_water_temp"]]
+        .replace(".", "", 1)
+        .isdigit()
+    ):
+        shared_fields[
+            "collection_water_temp"
+        ] = f"{(float(row[mappings['column_mappings']['collection_water_temp']]) - 32) * 5 / 9:.2f}"  # Convert Fahrenheit to Celsius
     else:
-        logging.warning(f"Collection water temperature ({row[mappings['column_mappings']['collection_water_temp']]}) for sample {sample_id} is not a number, skipping conversion and leaving empty")
-        shared_fields['collection_water_temp'] = ""
+        logging.warning(
+            f"Collection water temperature ({row[mappings['column_mappings']['collection_water_temp']]}) for sample {sample_id} is not a number, skipping conversion and leaving empty"
+        )
+        shared_fields["collection_water_temp"] = ""
 
     #  Check flow rate is a digit
-    if row[mappings['column_mappings']['flow_rate']].replace('.','',1).isdigit():
-        shared_fields['flow_rate'] = float(row[mappings['column_mappings']['flow_rate']])
+    if row[mappings["column_mappings"]["flow_rate"]].replace(".", "", 1).isdigit():
+        shared_fields["flow_rate"] = float(
+            row[mappings["column_mappings"]["flow_rate"]]
+        )
     else:
-        logging.warning(f"Flow rate ({row[mappings['column_mappings']['flow_rate']]}) for sample {sample_id} is not a number, leaving empty")
-        shared_fields['flow_rate'] = ""
+        logging.warning(
+            f"Flow rate ({row[mappings['column_mappings']['flow_rate']]}) for sample {sample_id} is not a number, leaving empty"
+        )
+        shared_fields["flow_rate"] = ""
 
     """
     Add site related fields to the shared fields.
@@ -211,46 +223,68 @@ def _process_row(row: dict, mappings: dict) -> dict:
             rec_eff_target_name: ""
             rec_eff_spike_matrix: ""
     """
-    site_id = row[mappings['column_mappings']['site']].lower().rstrip().replace(" ", "_")
-    if site_id not in mappings['sites']:
+    site_id = (
+        row[mappings["column_mappings"]["site"]].lower().rstrip().replace(" ", "_")
+    )
+    if site_id not in mappings["sites"]:
         if site_id.startswith("pt_") or site_id.startswith("exclude_"):
-            logging.debug(f"Site '{site_id}' is an exclusion, skipping sample {sample_id}")
+            logging.debug(
+                f"Site '{site_id}' is an exclusion, skipping sample {sample_id}"
+            )
             return {}
-        logging.warning(f"Site '{site_id}' not found in mappings, skipping sample {sample_id}")
+        logging.warning(
+            f"Site '{site_id}' not found in mappings, skipping sample {sample_id}"
+        )
         return {}
-    shared_fields['reporting_jurisdiction'] = mappings['sites'][site_id]['reporting_jurisdiction']
-    shared_fields['site_id'] = mappings['sites'][site_id]['site_id']
-    shared_fields['county_names'] = mappings['sites'][site_id]['county_names']
-    shared_fields['other_jurisdiction'] = mappings['sites'][site_id]['other_jurisdiction']
-    shared_fields['zipcode'] = mappings['sites'][site_id]['zipcode']
-    shared_fields['population_served'] = mappings['sites'][site_id]['population_served']
-    shared_fields['sample_location'] = mappings['sites'][site_id]['sample_location']
-    shared_fields['sample_location_specify'] = mappings['sites'][site_id]['sample_location_specify']
-    shared_fields['institution_type'] = mappings['sites'][site_id]['institution_type']
-    shared_fields['epaid'] = mappings['sites'][site_id]['epaid']
-    shared_fields['wwtp_name'] = mappings['sites'][site_id]['wwtp_name']
-    shared_fields['wwtp_jurisdiction'] = mappings['sites'][site_id]['wwtp_jurisdiction']
-    shared_fields['capacity_mgd'] = mappings['sites'][site_id]['capacity_mgd']
-    shared_fields['sample_type'] = mappings['sites'][site_id]['sample_type']
-    shared_fields['sample_matrix'] = mappings['sites'][site_id]['sample_matrix']
-    shared_fields['pretreatment'] = mappings['sites'][site_id]['pretreatment']
-    shared_fields['concentration_method'] = mappings['sites'][site_id]['concentration_method']
-    shared_fields['extraction_method'] = mappings['sites'][site_id]['extraction_method']
-    shared_fields['rec_eff_target_name'] = mappings['sites'][site_id]['rec_eff_target_name']
-    shared_fields['rec_eff_spike_matrix'] = mappings['sites'][site_id]['rec_eff_spike_matrix']
+    shared_fields["reporting_jurisdiction"] = mappings["sites"][site_id][
+        "reporting_jurisdiction"
+    ]
+    shared_fields["site_id"] = mappings["sites"][site_id]["site_id"]
+    shared_fields["county_names"] = mappings["sites"][site_id]["county_names"]
+    shared_fields["other_jurisdiction"] = mappings["sites"][site_id][
+        "other_jurisdiction"
+    ]
+    shared_fields["zipcode"] = mappings["sites"][site_id]["zipcode"]
+    shared_fields["population_served"] = mappings["sites"][site_id]["population_served"]
+    shared_fields["sample_location"] = mappings["sites"][site_id]["sample_location"]
+    shared_fields["sample_location_specify"] = mappings["sites"][site_id][
+        "sample_location_specify"
+    ]
+    shared_fields["institution_type"] = mappings["sites"][site_id]["institution_type"]
+    shared_fields["epaid"] = mappings["sites"][site_id]["epaid"]
+    shared_fields["wwtp_name"] = mappings["sites"][site_id]["wwtp_name"]
+    shared_fields["wwtp_jurisdiction"] = mappings["sites"][site_id]["wwtp_jurisdiction"]
+    shared_fields["capacity_mgd"] = mappings["sites"][site_id]["capacity_mgd"]
+    shared_fields["sample_type"] = mappings["sites"][site_id]["sample_type"]
+    shared_fields["sample_matrix"] = mappings["sites"][site_id]["sample_matrix"]
+    shared_fields["pretreatment"] = mappings["sites"][site_id]["pretreatment"]
+    shared_fields["concentration_method"] = mappings["sites"][site_id][
+        "concentration_method"
+    ]
+    shared_fields["extraction_method"] = mappings["sites"][site_id]["extraction_method"]
+    shared_fields["rec_eff_target_name"] = mappings["sites"][site_id][
+        "rec_eff_target_name"
+    ]
+    shared_fields["rec_eff_spike_matrix"] = mappings["sites"][site_id][
+        "rec_eff_spike_matrix"
+    ]
 
     # Add rec_eff_percent
-    shared_fields['rec_eff_percent'] = row[mappings['column_mappings']['rec_eff_percent']].replace("%", "")
+    shared_fields["rec_eff_percent"] = row[
+        mappings["column_mappings"]["rec_eff_percent"]
+    ].replace("%", "")
 
     row_results = []
-    for target, nwss_mapping in mappings['column_mappings']['targets'].items():
+    for target, nwss_mapping in mappings["column_mappings"]["targets"].items():
         if nwss_mapping in row:
             value = row[nwss_mapping]
             if value == "":
-                logging.debug(f"Value for '{target}' in sample {sample_id} is empty, skipping")
+                logging.debug(
+                    f"Value for '{target}' in sample {sample_id} is empty, skipping"
+                )
                 continue
             else:
-                if target not in mappings['targets']:
+                if target not in mappings["targets"]:
                     logging.debug(f"Target {target} not found in mappings, skipping")
                     continue
                 else:
@@ -270,25 +304,44 @@ def _process_row(row: dict, mappings: dict) -> dict:
                                 inhibition_method: ""
                     """
                     # Combine the shared fields with the row result
-                    row_results.append({
-                        **shared_fields,
-                        'pcr_target_avg_conc': value,
-                        'pcr_target': mappings['targets'][target]['pcr_target'],
-                        'pcr_gene_target': mappings['targets'][target]['pcr_gene_target'],
-                        'pcr_gene_target_ref': mappings['targets'][target]['pcr_gene_target_ref'],
-                        'pcr_type': mappings['targets'][target]['pcr_type'],
-                        'lod_ref': mappings['targets'][target]['lod_ref'],
-                        'quant_stan_type': mappings['targets'][target]['quant_stan_type'],
-                        'stan_ref': mappings['targets'][target]['stan_ref'],
-                        'inhibition_method': mappings['targets'][target]['inhibition_method'],
-                        'sample_collect_date': row[mappings['column_mappings']['sample_collect_date']].split()[0],
-                        'sample_collect_time': row[mappings['column_mappings']['sample_collect_date']].split()[1],
-                        'test_result_date': row[mappings['column_mappings']['test_result_date']],
-                    })
+                    row_results.append(
+                        {
+                            **shared_fields,
+                            "pcr_target_avg_conc": value,
+                            "pcr_target": mappings["targets"][target]["pcr_target"],
+                            "pcr_gene_target": mappings["targets"][target][
+                                "pcr_gene_target"
+                            ],
+                            "pcr_gene_target_ref": mappings["targets"][target][
+                                "pcr_gene_target_ref"
+                            ],
+                            "pcr_type": mappings["targets"][target]["pcr_type"],
+                            "lod_ref": mappings["targets"][target]["lod_ref"],
+                            "quant_stan_type": mappings["targets"][target][
+                                "quant_stan_type"
+                            ],
+                            "stan_ref": mappings["targets"][target]["stan_ref"],
+                            "inhibition_method": mappings["targets"][target][
+                                "inhibition_method"
+                            ],
+                            "sample_collect_date": row[
+                                mappings["column_mappings"]["sample_collect_date"]
+                            ].split()[0],
+                            "sample_collect_time": row[
+                                mappings["column_mappings"]["sample_collect_date"]
+                            ].split()[1],
+                            "test_result_date": row[
+                                mappings["column_mappings"]["test_result_date"]
+                            ],
+                        }
+                    )
         else:
-            logging.warning(f"Target {target} not found in row for sample {sample_id}, skipping")
+            logging.warning(
+                f"Target {target} not found in row for sample {sample_id}, skipping"
+            )
 
     return row_results
+
 
 def parse_results(input: str, mappings: dict) -> dict:
     """

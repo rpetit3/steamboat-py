@@ -16,8 +16,12 @@ from steamboat.io.check import check_file, file_exists_error
 from steamboat.io.fasta import read_fasta
 from steamboat.io.table import read_table
 from steamboat.io.yaml import read_yaml
-from steamboat.repos.gisaid import gisaid_header, gisaid_formatter, parse_consensus_assemblies, parse_results
-
+from steamboat.repos.gisaid import (
+    gisaid_formatter,
+    gisaid_header,
+    parse_consensus_assemblies,
+    parse_results,
+)
 
 # Set up Rich
 stderr = rich.console.Console(stderr=True)
@@ -81,7 +85,9 @@ click.rich_click.OPTION_GROUPS = {
     "--sequencer",
     "-s",
     required=False if "--version" in sys.argv else True,
-    type=click.Choice(['clearlabs', 'iseq', 'hiseq', 'miseq', 'nextseq', 'ont'], case_sensitive=True),
+    type=click.Choice(
+        ["clearlabs", "iseq", "hiseq", "miseq", "nextseq", "ont"], case_sensitive=True
+    ),
     help="Sequencer used to generate sequences.",
 )
 @click.option(
@@ -123,15 +129,15 @@ click.rich_click.OPTION_GROUPS = {
 @click.option(
     "--pipeline",
     "-p",
-    default='cecret',
-    type=click.Choice(['cecret', 'titan'], case_sensitive=True),
+    default="cecret",
+    type=click.Choice(["cecret", "titan"], case_sensitive=True),
     show_default=True,
     help="Pipeline used for analysis.",
 )
 @click.option(
     "--extension",
     "-e",
-    default='consensus.fa',
+    default="consensus.fa",
     show_default=True,
     help="The extension used for assemblies.",
 )
@@ -185,9 +191,9 @@ def gisaid_batch(
     yaml_file = check_file(yaml)
 
     # Output files
-    gisaid_fasta = f'{outdir}/{prefix}.fasta'
-    gisaid_metadata = f'{outdir}/{prefix}.csv'
-    gisaid_excluded = f'{outdir}/{prefix}.excluded.txt'
+    gisaid_fasta = f"{outdir}/{prefix}.fasta"
+    gisaid_metadata = f"{outdir}/{prefix}.csv"
+    gisaid_excluded = f"{outdir}/{prefix}.excluded.txt"
 
     # Make sure output files don't already exist
     file_exists_error(gisaid_fasta, force)
@@ -204,26 +210,30 @@ def gisaid_batch(
     excluded = []
     final_data = {}
     for sample in metadata:
-        sample_id = sample['sample_id']
+        sample_id = sample["sample_id"]
         if sample_prefix:
             sample_id = f"{sample_prefix}{sample_id}"
 
         if sample_id not in results:
-            logging.warning(f"Results for {sample_id} not found in {results_file}, skipping")
+            logging.warning(
+                f"Results for {sample_id} not found in {results_file}, skipping"
+            )
             continue
 
         if sample_id not in assemblies:
-            logging.warning(f"Consensus assembly for {sample_id} not found in {assemblies.keys()}, skipping")
+            logging.warning(
+                f"Consensus assembly for {sample_id} not found in {assemblies.keys()}, skipping"
+            )
             continue
 
         # Check if the sample passes the filters
         exclude_reason = []
-        if float(results[sample_id]['percent_coverage']) < min_coverage:
+        if float(results[sample_id]["percent_coverage"]) < min_coverage:
             message = f"{sample_id} - Low percent coverage ({results[sample_id]['percent_coverage']}%). Expected >= {min_coverage}%"
             exclude_reason.append(message)
             logging.warning(message)
 
-        if int(results[sample_id]['total_ns']) > max_ns:
+        if int(results[sample_id]["total_ns"]) > max_ns:
             message = f"{sample_id} - Too many Ns ({results[sample_id]['total_ns']}). Expected <= {max_ns}"
             exclude_reason.append(message)
             logging.warning(message)
@@ -232,29 +242,31 @@ def gisaid_batch(
             excluded.append([sample_id, ";".join(exclude_reason)])
         else:
             final_data[sample["sample_id"]] = {
-                'data': gisaid_formatter(
+                "data": gisaid_formatter(
                     sample,
                     str(Path(gisaid_fasta).name),
                     sequencer,
                     yaml_data,
                 ),
-                'sequence': assemblies[sample_id],
+                "sequence": assemblies[sample_id],
             }
 
     # Write the output files
     logging.info(f"Writing {gisaid_metadata}")
     logging.info(f"Writing {gisaid_fasta}")
-    with open(gisaid_fasta, 'wt') as fasta_fh, open(gisaid_metadata, 'wt') as metadata_fh:
+    with open(gisaid_fasta, "wt") as fasta_fh, open(
+        gisaid_metadata, "wt"
+    ) as metadata_fh:
         metadata_fh.write(gisaid_header())
         for sample, data in final_data.items():
-            fields = [f'"{x}"' for x in data['data'].values()]
+            fields = [f'"{x}"' for x in data["data"].values()]
             row = ",".join(fields)
             metadata_fh.write(f"{row}\n")
             fasta_fh.write(f">{data['data']['covv_virus_name']}\n{data['sequence']}\n")
 
     # Write the excluded samples
     logging.info(f"Writing {gisaid_excluded}")
-    with open(gisaid_excluded, 'wt') as excluded_fh:
+    with open(gisaid_excluded, "wt") as excluded_fh:
         excluded_fh.write("sample_id\treason\n")
         for sample in excluded:
             excluded_fh.write(f"{sample[0]}\t{sample[1]}\n")

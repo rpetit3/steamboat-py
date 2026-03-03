@@ -6,8 +6,8 @@ from steamboat.io.table import read_table
 ARLN_FIELDS = [
     "record_id",
     "arln_specimen_id",
-    "phl",        # WY
-    "wgs_status", # WGS Successful
+    "phl",  # WY
+    "wgs_status",  # WGS Successful
     "wgs_id",
     "srr_number",
     "bacterial_wgs_result",
@@ -51,20 +51,23 @@ def _process_metadata(row: dict) -> dict:
         }
         missing = [field for field, value in required_fields.items() if not value]
         if missing:
-            return {"_missing": missing, "_sample": row.get("LIMS ID #", "UNKNOWN").strip() or "UNKNOWN"}
+            return {
+                "_missing": missing,
+                "_sample": row.get("LIMS ID #", "UNKNOWN").strip() or "UNKNOWN",
+            }
 
         # Process CRE sample
         lims_id = required_fields["LIMS ID #"]
         # Extract year from first two digits of LIMS ID
         year = f"20{lims_id[:2]}"
         return {
-            'record_id': lims_id,
-            'arln_specimen_id': lims_id,
-            'wgs_id': f"{year}LC_{lims_id}",
-            'srr_number': required_fields["SRR ID"],
-            'wgs_date_id_created': required_fields["Extraction Date"],
-            'wgs_date_sent_to_seqfac': required_fields["Extraction Date"],
-            'wgs_date_put_on_sequencer': required_fields["Date Sequenced"],
+            "record_id": lims_id,
+            "arln_specimen_id": lims_id,
+            "wgs_id": f"{year}LC_{lims_id}",
+            "srr_number": required_fields["SRR ID"],
+            "wgs_date_id_created": required_fields["Extraction Date"],
+            "wgs_date_sent_to_seqfac": required_fields["Extraction Date"],
+            "wgs_date_put_on_sequencer": required_fields["Date Sequenced"],
         }
 
     return {}
@@ -119,12 +122,12 @@ def parse_arln(metadata: str, gigatyper: str) -> dict:
         missing = []
 
         if "_missing" in row_results:
-            missing.extend(row_results['_missing'])
+            missing.extend(row_results["_missing"])
 
         if sample not in gigatyper_results:
             missing.append("GigaTyper results")
         elif not missing:
-            row_results['bacterial_wgs_result'] = gigatyper_results[sample]
+            row_results["bacterial_wgs_result"] = gigatyper_results[sample]
 
         if missing:
             errors[sample] = missing
