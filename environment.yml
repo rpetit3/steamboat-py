@@ -2,6 +2,9 @@ channels:
   - conda-forge
   - bioconda
 dependencies:
+  - fastq-scan >=1.0.1
+  - just
   - packaging >=24.0
   - poetry
+  - pre_commit
   - python >=3.7

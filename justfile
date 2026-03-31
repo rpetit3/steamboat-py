@@ -2,25 +2,29 @@ PROJECT := "steamboat"
 OPEN := if os() == "macos" { "open" } else { "xdg-open" }
 VERSION := `poetry version -s`
 
-# format code with black and isort
+# format code with ruff
 fmt:
-    poetry run black .
-    poetry run isort .
+    poetry run ruff format .
+    poetry run ruff check --fix .
 
-# check format of code with black and isort
+# check format and lint with ruff
 check-fmt:
-    poetry run black --check .
-    poetry run isort --check .
+    poetry run ruff format --check .
+    poetry run ruff check .
 
-# lint code with flake8
+# lint code with ruff
 lint:
-    poetry run flake8 .
+    poetry run ruff check .
 
 # install latest version with poetry
 install:
     poetry install --no-interaction
 
-# check formatting, linting, and tests
+# run tests with pytest
+test:
+    poetry run pytest -v
+
+# check formatting and linting
 check: check-fmt lint
 
 # prints out the commands to run to tag the release and push it
