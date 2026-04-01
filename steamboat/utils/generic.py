@@ -100,10 +100,9 @@ def _execute_piped(cmd, directory, capture):
                 stderr=stderr_bytes,
             )
 
-    stdout = stdout_bytes.decode() if stdout_bytes else ""
     stderr = stderr_bytes.decode() if stderr_bytes else ""
 
-    # Handle redirect
+    # Handle redirect - write binary bytes to file before any decoding
     if redirect_file:
         redirect_path = Path(directory) / redirect_file if not Path(redirect_file).is_absolute() else Path(redirect_file)
         redirect_path.parent.mkdir(parents=True, exist_ok=True)
@@ -111,6 +110,8 @@ def _execute_piped(cmd, directory, capture):
             fh.write(stdout_bytes or b"")
         logging.debug(f"Redirected output to {redirect_path}")
         stdout = ""
+    else:
+        stdout = stdout_bytes.decode() if stdout_bytes else ""
 
     logging.debug(f"STDOUT:\n{stdout}")
     logging.debug(f"STDERR:\n{stderr}")
