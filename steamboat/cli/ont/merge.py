@@ -44,6 +44,18 @@ click.rich_click.OPTION_GROUPS = {
 }
 
 
+def _format_bp(bp):
+    """Format base pairs into a human-readable string."""
+    if bp >= 1_000_000_000:
+        return f"{bp / 1_000_000_000:.2f} Gbp"
+    elif bp >= 1_000_000:
+        return f"{bp / 1_000_000:.2f} Mbp"
+    elif bp >= 1_000:
+        return f"{bp / 1_000:.2f} Kbp"
+    else:
+        return f"{bp} bp"
+
+
 def _print_summary(summary):
     """
     Print a condensed Rich table summary to stderr.
@@ -61,8 +73,8 @@ def _print_summary(summary):
         table.add_row(
             row["flowcell_id"],
             row["sample_id"],
-            str(row["pass_total_bp"]),
-            str(row["fail_total_bp"]),
+            _format_bp(row["pass_total_bp"]),
+            _format_bp(row["fail_total_bp"]),
         )
 
     stderr.print(table)
