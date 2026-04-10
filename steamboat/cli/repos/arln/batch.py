@@ -30,6 +30,7 @@ click.rich_click.OPTION_GROUPS = {
         {
             "name": "Additional Options",
             "options": [
+                "--allow-missing",
                 "--prefix",
                 "--outdir",
                 "--force",
@@ -72,6 +73,11 @@ click.rich_click.OPTION_GROUPS = {
     show_default=True,
     help="Prefix to use for output files",
 )
+@click.option(
+    "--allow-missing",
+    is_flag=True,
+    help="Allow missing data without exiting (missing fields will be logged)",
+)
 @click.option("--force", is_flag=True, help="Overwrite existing reports")
 @click.option("--verbose", is_flag=True, help="Increase the verbosity of output")
 @click.option("--silent", is_flag=True, help="Only critical errors will be printed")
@@ -81,6 +87,7 @@ def arln_batch(
     gigatyper,
     outdir,
     prefix,
+    allow_missing,
     force,
     verbose,
     silent,
@@ -117,7 +124,7 @@ def arln_batch(
         arln_csv.unlink()
 
     # Read in the data
-    parsed_results = parse_arln(metadata_file, gigatyper_file)
+    parsed_results = parse_arln(metadata_file, gigatyper_file, allow_missing=allow_missing)
 
     # Write the output files
     logging.info(f"Writing {arln_csv}")

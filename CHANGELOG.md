@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## v1.3.1
+
+- Adjusted `arln-batch` to allow missing data without exiting (missing fields will be logged)
+- Changed the parsing of wgs_id in `arln-batch`
+
 ## v1.3.0
 
 ### Added

@@ -45,6 +45,7 @@ def _process_metadata(row: dict) -> dict:
         # Check for missing required fields
         required_fields = {
             "LIMS ID #": row.get("LIMS ID #", "").strip(),
+            "ARLN WGS ID": row.get("ARLN WGS ID", "").strip(),
             "SRR ID": row.get("SRR ID", "").strip(),
             "Extraction Date": row.get("Extraction Date", "").strip(),
             "Date Sequenced": row.get("Date Sequenced", "").strip(),
@@ -63,7 +64,7 @@ def _process_metadata(row: dict) -> dict:
         return {
             "record_id": lims_id,
             "arln_specimen_id": lims_id,
-            "wgs_id": f"{year}LC_{lims_id}",
+            "wgs_id": required_fields["ARLN WGS ID"],
             "srr_number": required_fields["SRR ID"],
             "wgs_date_id_created": required_fields["Extraction Date"],
             "wgs_date_sent_to_seqfac": required_fields["Extraction Date"],
@@ -88,7 +89,7 @@ def _process_gigatyper(row: dict) -> tuple:
     return row["sample"], row["formatted_report"]
 
 
-def parse_arln(metadata: str, gigatyper: str) -> dict:
+def parse_arln(metadata: str, gigatyper: str, allow_missing: bool = False) -> dict:
     """
     Parse a sequencing metadata file and a GigaTyper results file,
     then return a list of ARLN-formatted results.
@@ -96,6 +97,7 @@ def parse_arln(metadata: str, gigatyper: str) -> dict:
     Args:
         metadata (str): sequencing metadata file to be parsed in CSV format
         gigatyper (str): GigaTyper results file to be parsed in TSV format
+        allow_missing (bool): whether to allow missing data without exiting
 
     Returns:
         list: A list of ARLN-formatted result dictionaries
@@ -139,6 +141,7 @@ def parse_arln(metadata: str, gigatyper: str) -> dict:
         logging.error("Samples with missing data detected:")
         for sample, missing in errors.items():
             logging.error(f"  Sample '{sample}': missing {', '.join(missing)}")
-        sys.exit(1)
+        if not allow_missing:
+            sys.exit(1)
 
     return results
